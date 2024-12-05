@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import joblib
 
-# Modelni yuklash
 model_path = "purchase_amount_predictor.pkl"
 model = joblib.load(model_path)
 
@@ -35,6 +34,5 @@ if st.sidebar.button("Bashorat qilish"):
 else:
     st.info("Ma'lumotlarni kiriting va 'Bashorat qilish' tugmasini bosing.")
 
-# Eslatma
 st.write("---")
 st.write("Ushbu dastur xaridorlarning xarid miqdorini bashorat qilish uchun Random Forest Regression modelidan foydalanadi.")
