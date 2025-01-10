@@ -1,38 +1,106 @@
+# import bcrypt
+
+# # Foydalanuvchi ma'lumotlarini saqlash uchun oddiy ma'lumotlar bazasi
+# user_database = {}
+
+# # Parolni xesh qilish funksiyasi
+# def hash_password(password):
+#     # Parolni xavfsiz xesh qilish
+#     salt = bcrypt.gensalt()
+#     hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+#     return hashed
+
+# # Foydalanuvchini ro'yxatdan o'tkazish funksiyasi
+# def register_user(username, password):
+#     if username in user_database:
+#         print("Bu foydalanuvchi allaqachon ro'yxatdan o'tgan.")
+#     else:
+#         hashed_password = hash_password(password)
+#         user_database[username] = hashed_password
+#         print(f"{username} muvaffaqiyatli ro'yxatdan o'tkazildi!")
+
+# # Loginni tekshirish funksiyasi
+# def login_user(username, password):
+#     if username in user_database:
+#         stored_password = user_database[username]
+#         # Kiritilgan parolni tekshirish
+#         if bcrypt.checkpw(password.encode('utf-8'), stored_password):
+#             print("Login muvaffaqiyatli!")
+#         else:
+#             print("Parol noto'g'ri.")
+#     else:
+#         print("Bunday foydalanuvchi mavjud emas.")
+
+# # Test dasturi
+# if __name__ == "__main__":
+#     print("Ro'yxatdan o'tish:")
+#     register_user("foydalanuvchi1", "maxfiy_parol")
+    
+#     print("\nLogin qilish:")
+#     login_user("foydalanuvchi1", "maxfiy_parol")  # To'g'ri parol
+#     login_user("foydalanuvchi1", "noto'g'ri_parol")  # Noto'g'ri parol
+
+
+import bcrypt
 import streamlit as st
-import pandas as pd
-import joblib
 
-model_path = "purchase_amount_predictor.pkl"
-model = joblib.load(model_path)
+# Foydalanuvchi ma'lumotlarini saqlash uchun oddiy ma'lumotlar bazasi
+user_database = {}
 
-# Sarlavha
-st.title("Xaridorlar Xarid Miqdorini Bashorat Qilish Ilovasi")
+# Parolni xesh qilish funksiyasi
+def hash_password(password):
+    # Parolni xavfsiz xesh qilish
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed
 
-# Foydalanuvchidan kirish ma'lumotlarini olish
-st.sidebar.header("Ma'lumotlarni kiriting:")
+# Foydalanuvchini ro'yxatdan o'tkazish funksiyasi
+def register_user(username, password):
+    if username in user_database:
+        return "Bu foydalanuvchi allaqachon ro'yxatdan o'tgan."
+    else:
+        hashed_password = hash_password(password)
+        user_database[username] = hashed_password
+        return f"{username} muvaffaqiyatli ro'yxatdan o'tkazildi!"
 
-age_group = st.sidebar.selectbox("Yosh guruhi:", ['18-24', '25-34', '35-44', '45-54', '55+'])
-category = st.sidebar.selectbox("Kategoriya:", ['Electronics', 'Fashion', 'Home & Kitchen', 'Sports', 'Books', 'Beauty'])
-region = st.sidebar.selectbox("Hudud:", ['North', 'South', 'East', 'West'])
-purchase_method = st.sidebar.selectbox("Xarid qilish usuli:", ['Online', 'In-store'])
-day_of_purchase = st.sidebar.slider("Xarid qilingan kun:", 1, 31, 15)
+# Loginni tekshirish funksiyasi
+def login_user(username, password):
+    if username in user_database:
+        stored_password = user_database[username]
+        # Kiritilgan parolni tekshirish
+        if bcrypt.checkpw(password.encode('utf-8'), stored_password):
+            return "Login muvaffaqiyatli!"
+        else:
+            return "Parol noto'g'ri."
+    else:
+        return "Bunday foydalanuvchi mavjud emas."
 
-# Foydalanuvchi kiritgan ma'lumotlardan DataFrame yaratish
-input_data = pd.DataFrame({
-    'AgeGroup': [age_group],
-    'Category': [category],
-    'Region': [region],
-    'PurchaseMethod': [purchase_method],
-    'DayOfPurchase': [day_of_purchase]
-})
+# Streamlit interfeysi
+st.title("Foydalanuvchi tizimi: Ro'yxatdan o'tish va Login")
 
-# Bashorat qilish tugmasi
-if st.sidebar.button("Bashorat qilish"):
-    # Modeldan foydalangan holda bashorat qilish
-    prediction = model.predict(input_data)
-    st.success(f"Bashorat qilingan xarid miqdori: ${prediction[0]:.2f}")
-else:
-    st.info("Ma'lumotlarni kiriting va 'Bashorat qilish' tugmasini bosing.")
+menu = st.sidebar.selectbox("Menu", ["Ro'yxatdan o'tish", "Login"])
 
-st.write("---")
-st.write("Ushbu dastur xaridorlarning xarid miqdorini bashorat qilish uchun Random Forest Regression modelidan foydalanadi.")
+if menu == "Ro'yxatdan o'tish":
+    st.subheader("Ro'yxatdan o'tish")
+    username = st.text_input("Foydalanuvchi nomi")
+    password = st.text_input("Parol", type="password")
+    if st.button("Ro'yxatdan o'tish"):
+        if username and password:
+            message = register_user(username, password)
+            st.success(message)
+        else:
+            st.error("Iltimos, foydalanuvchi nomi va parolni kiriting.")
+
+elif menu == "Login":
+    st.subheader("Login qilish")
+    username = st.text_input("Foydalanuvchi nomi")
+    password = st.text_input("Parol", type="password")
+    if st.button("Login"):
+        if username and password:
+            message = login_user(username, password)
+            if "muvaffaqiyatli" in message.lower():
+                st.success(message)
+            else:
+                st.error(message)
+        else:
+            st.error("Iltimos, foydalanuvchi nomi va parolni kiriting.")
